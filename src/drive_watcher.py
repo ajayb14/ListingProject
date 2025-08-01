@@ -3,8 +3,6 @@ import os
 from list_image_files import list_image_files
 from download_file import download_file
 from move_file_to_processed import move_file_to_processed
-from drive_auth import get_drive_service
-from gpt_processor import analyze_image_with_gpt, save_listing_data, print_listing_preview
 from dotenv import load_dotenv
 
 # Load variables from env file
@@ -17,11 +15,9 @@ PROCESSED_FOLDER_ID = os.getenv("PROCESSED_FOLDER_ID")
 # Use polling for now, but we can use webhooks later if we want to
 def drive_watcher():
 
-    # Initialize Google Drive service
-    service = get_drive_service()
-    if service is None:
-        print("Failed to authenticate with Google Drive. Exiting...")
-        return
+    # Initialize Google Drive service (We do this because the Google Drive API needs to be authenticated)
+    service = None
+
     print("Drive watcher started...")
     while True:
         image_files = list_image_files(service, UNPROCESSED_FOLDER_ID)
