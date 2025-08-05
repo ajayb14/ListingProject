@@ -45,8 +45,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Downloaded images
-images/to_upload/*
-images/processed/*
-!images/to_upload/.gitkeep
-!images/processed/.gitkeep 
+# Downloaded images and temporary files
+downloaded_images_etsy/
+temp/
+generated_listings/ 
