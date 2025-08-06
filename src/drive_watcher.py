@@ -45,7 +45,7 @@ def drive_watcher():
                     # Move the product folder to processed
                     move_product_folder_to_processed(service, product_folder_id)
                     
-                    # Clean up the downloaded images from temp folder
+                    # Delete the downloaded images from the downloaded_images_etsy folder
                     cleanup_etsy_images_files(safe_folder_name)
         
         time.sleep(60) # Wait a minute before checking the folder for new images again
