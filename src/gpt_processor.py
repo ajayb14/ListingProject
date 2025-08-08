@@ -130,18 +130,19 @@ Focus on making this listing discoverable through Etsy search while accurately r
             # Validate the response
             if 'title' in listing_data and 'description' in listing_data and 'tags' in listing_data:
                 if len(listing_data['title']) <= 140 and len(listing_data['tags']) == 13:
-                    return listing_data
+                    # Return both listing data and product info
+                    return listing_data, product_info
                 else:
                     print(f"Invalid response format: title length or tag count incorrect")
-                    return None
+                    return None, None
             else:
                 print(f"Missing required fields in GPT response")
-                return None
+                return None, None
                 
         except json.JSONDecodeError:
             print(f"Failed to parse JSON response from GPT")
-            return None
+            return None, None
             
     except Exception as e:
         print(f"Error generating Etsy listing content: {e}")
-        return None 
+        return None, None 

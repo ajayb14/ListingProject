@@ -5,6 +5,7 @@ from download_file import download_file, cleanup_etsy_images_files
 from move_folder_to_processed import move_product_folder_to_processed
 from drive_authentication import get_drive_service
 from gpt_processor import generate_etsy_listing_content
+from etsy_processor import create_etsy_draft_listing
 from dotenv import load_dotenv
 
 # Load variables from env file
@@ -43,17 +44,24 @@ def drive_watcher():
                 # Check if download was successful
                 if download_path is not None:
                     # Generate Etsy listing content using GPT
-                    listing_data = generate_etsy_listing_content(download_path, product_folder_name)
+                    listing_data, product_info = generate_etsy_listing_content(download_path, product_folder_name)
                     
                     # Check if GPT processing was successful
-                    if listing_data is not None:
-                        # Send listing_data to Etsy API to create draft listing here
+                    if listing_data is not None and product_info is not None:
+                        # Create draft listing on Etsy
+                        listing_id = create_etsy_draft_listing(listing_data, download_path, product_info)
                         
-                        # Move the product folder to processed
-                        move_product_folder_to_processed(service, product_folder_id)
-                        
-                        # Delete the downloaded images from the downloaded_images_etsy folder
-                        cleanup_etsy_images_files(safe_folder_name)
+                        # Check if Etsy listing creation was successful
+                        if listing_id is not None:
+                            # Move the product folder to processed
+                            move_product_folder_to_processed(service, product_folder_id)
+                            
+                            # Delete the downloaded images from the downloaded_images_etsy folder
+                            cleanup_etsy_images_files(safe_folder_name)
+                        else:
+                            # Etsy listing creation failed, don't move folder yet
+                            # Clean up downloaded image but leave folder in Unprocessed
+                            cleanup_etsy_images_files(safe_folder_name)
                     else:
                         # GPT processing failed, don't move the folder to processed
                         # Clean up downloaded image but leave folder in Unprocessed
