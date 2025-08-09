@@ -12,47 +12,70 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Encode image to base64 for GPT-4 Vision API
 def encode_image_to_base64(image_path):
-    
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+    try:
+        print("Encoding image to base64")
+        with open(image_path, "rb") as image_file:
+            data = image_file.read()
+        encoded = base64.b64encode(data)
+        text = encoded.decode('utf-8')
+        print("Image encoded successfully")
+        return text
+    except Exception as e:
+        print("Error in encode_image_to_base64:", e)
+        return None
 
 # Extract information from product folder name: <Painting title>_<Print/Original>_<Size>_<Price>
 def extract_product_info(product_folder_name):
-    
-    parts = product_folder_name.split('_')
-    
-    if len(parts) == 4:
-        painting_title = parts[0]
-        art_type = parts[1]  # Print or Original
-        size = parts[2]
-        price = parts[3]
+    try:
+        print("Extracting product info from folder name:", product_folder_name)
+        parts = product_folder_name.split('_')
         
-        return {
-            'painting_title': painting_title,
-            'art_type': art_type,
-            'size': size,
-            'price': price
-        }
-    else:
-        # if format doesn't match, use the folder name as the painting title
-        return {
+        if len(parts) == 4:
+            painting_title = parts[0]
+            art_type = parts[1]
+            size = parts[2]
+            price = parts[3]
+            info = {
+                'painting_title': painting_title,
+                'art_type': art_type,
+                'size': size,
+                'price': price
+            }
+            print("Extracted product info")
+            return info
+        else:
+            # if format doesn't match, use the folder name as the painting title
+            info = {
+                'painting_title': product_folder_name,
+                'art_type': 'Original',
+                'size': 'Unknown',
+                'price': 'Unknown'
+            }
+            print("Folder name format unknown. Using defaults")
+            return info
+    except Exception as e:
+        print("Error in extract_product_info:", e)
+        fallback = {
             'painting_title': product_folder_name,
             'art_type': 'Original',
             'size': 'Unknown',
             'price': 'Unknown'
         }
+        return fallback
 
 # Generate Etsy listing content using GPT-4 Vision
 def generate_etsy_listing_content(image_path, product_folder_name):
-    
     try:
+        print("Generating Etsy listing content with GPT")
         # Extract product information from folder name
         product_info = extract_product_info(product_folder_name)
         
-        # Encode image
+        # Encode image to base64 for GPT-4 Vision API
         base64_image = encode_image_to_base64(image_path)
+        if base64_image is None:
+            print("Failed to encode image. Cannot call GPT")
+            return None, None
         
-        # Create the prompt with product information
         prompt = f"""
 You are an expert Etsy marketing specialist who creates compelling, search-optimized listings for original artwork and prints.
 
@@ -90,15 +113,16 @@ REQUIREMENTS:
    - Size (small, medium, large, etc.)
 
 RESPOND IN THIS EXACT JSON FORMAT:
-{{
+{
     "title": "Your optimized title here (max 140 chars)",
     "description": "Your detailed description here",
     "tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11", "tag12", "tag13"]
-}}
+}
 
 Focus on making this listing discoverable through Etsy search while accurately representing the artwork.
 """
-
+        
+        print("Calling GPT-4 Vision API")
         # Call GPT-4 Vision API
         response = openai.ChatCompletion.create(
             model="gpt-4-vision-preview",
@@ -119,30 +143,35 @@ Focus on making this listing discoverable through Etsy search while accurately r
             max_tokens=1000,
             temperature=0.7
         )
-        
+        print("Received response from GPT")
         # Extract the response content (text)
         content = response.choices[0].message.content
+        print("Parsing GPT response JSON")
         
-        # Try to parse (change from text to python data) JSON response
+
+        # Validate the response
         try:
             listing_data = json.loads(content)
-            
-            # Validate the response
-            if 'title' in listing_data and 'description' in listing_data and 'tags' in listing_data:
-                if len(listing_data['title']) <= 140 and len(listing_data['tags']) == 13:
+            has_title = 'title' in listing_data
+            has_description = 'description' in listing_data
+            has_tags = 'tags' in listing_data
+            if has_title and has_description and has_tags:
+                title_ok = len(listing_data['title']) <= 140
+                tags_ok = len(listing_data['tags']) == 13
+                if title_ok and tags_ok:
+                    print("Validated GPT response")
                     # Return both listing data and product info
                     return listing_data, product_info
                 else:
-                    print(f"Invalid response format: title length or tag count incorrect")
+                    print("Invalid response format: title length or tag count incorrect")
                     return None, None
             else:
-                print(f"Missing required fields in GPT response")
+                print("Missing required fields in GPT response")
                 return None, None
-                
         except json.JSONDecodeError:
-            print(f"Failed to parse JSON response from GPT")
+            print("Failed to parse JSON response from GPT")
             return None, None
-            
+        
     except Exception as e:
-        print(f"Error generating Etsy listing content: {e}")
-        return None, None 
+        print("Error generating Etsy listing content:", e)
+        return None, None

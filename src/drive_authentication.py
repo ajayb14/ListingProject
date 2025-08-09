@@ -12,23 +12,29 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 
 # Authenticate with Google Drive using service account.
 def get_drive_service():
-    
     try:
+        print("Starting Google Drive authentication")
+        
         # Get the path to the service account key file
         service_account_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', 'service-account-key.json')
         
         # Check if the service account key file exists
-        if not os.path.exists(service_account_file):
+        exists_key_file = os.path.exists(service_account_file)
+        if not exists_key_file:
+            print("Service account key file not found")
             return None
         
         # Create credentials from the service account key file (Authentication part)
         credentials = service_account.Credentials.from_service_account_file(
             service_account_file, scopes=SCOPES)
+        print("Credentials created")
         
         # Build the Google Drive service (Service creation part)
         service = build('drive', 'v3', credentials=credentials)
+        print("Google Drive service created")
         
         return service
         
     except Exception as e:
+        print("Error in get_drive_service:", e)
         return None

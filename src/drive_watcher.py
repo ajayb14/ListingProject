@@ -15,59 +15,68 @@ load_dotenv()
 UNPROCESSED_FOLDER_ID = os.getenv("UNPROCESSED_FOLDER_ID")
 PROCESSED_FOLDER_ID = os.getenv("PROCESSED_FOLDER_ID")
 
-# Use polling for now, but we can use webhooks later if we want to
+# Single-run watcher: process one image if available, then exit
 def drive_watcher():
+    print("Starting drive watcher")
     # Initialize Google Drive service 
     service = get_drive_service()
     if service is None:
+        print("Failed to initialize Google Drive service")
         return
     
-    while True:
-        # Get list of images from all product folders
+    try:
+        print("Checking for images in Unprocessed folder")
         image_files = list_image_files(service, UNPROCESSED_FOLDER_ID)
         
-        # Do one image at a time
         if image_files:
-            # Get the image and folder information
+            print("Images found. Processing first image")
             file = image_files[0]
             product_folder_id = file.get('product_folder_id')
             product_folder_name = file.get('product_folder_name')
             
-            # Check if we have valid folder information
             if product_folder_id is not None and product_folder_name is not None:
                 file_id = file['id']
                 file_name = file['name']
                 
-                # Download the image to product subdirectory
                 download_path, safe_folder_name = download_file(service, file_id, file_name, product_folder_name)
                 
-                # Check if download was successful
                 if download_path is not None:
-                    # Generate Etsy listing content using GPT
+                    print("Image downloaded locally")
                     listing_data, product_info = generate_etsy_listing_content(download_path, product_folder_name)
                     
-                    # Check if GPT processing was successful
                     if listing_data is not None and product_info is not None:
-                        # Create draft listing on Etsy
+                        print("Received listing content from GPT")
                         listing_id = create_etsy_draft_listing(listing_data, download_path, product_info)
                         
-                        # Check if Etsy listing creation was successful
                         if listing_id is not None:
-                            # Move the product folder to processed
+                            print("Created Etsy draft listing")
                             move_product_folder_to_processed(service, product_folder_id)
-                            
-                            # Delete the downloaded images from the downloaded_images_etsy folder
+                            print("Moved product folder to Processed")
                             cleanup_etsy_images_files(safe_folder_name)
+                            print("Cleaned up local downloaded images")
+                            return
                         else:
-                            # Etsy listing creation failed, don't move folder yet
-                            # Clean up downloaded image but leave folder in Unprocessed
+                            print("Failed to create Etsy draft listing")
                             cleanup_etsy_images_files(safe_folder_name)
+                            print("Cleaned up local downloaded images")
+                            return
                     else:
-                        # GPT processing failed, don't move the folder to processed
-                        # Clean up downloaded image but leave folder in Unprocessed
+                        print("Failed to generate listing content from GPT")
                         cleanup_etsy_images_files(safe_folder_name)
-        
-        time.sleep(60) # Wait a minute before checking the folder for new images again
+                        print("Cleaned up local downloaded images")
+                        return
+                else:
+                    print("Failed to download image")
+                    return
+            else:
+                print("Missing product folder information. Exiting")
+                return
+        else:
+            print("No images found")
+            return
+    except Exception as e:
+        print("Error in drive_watcher:", e)
+        return
 
 if __name__ == "__main__":
     drive_watcher()
