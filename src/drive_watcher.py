@@ -9,7 +9,7 @@ from etsy_processor import create_etsy_draft_listing
 from dotenv import load_dotenv
 
 # Load variables from env file
-load_dotenv()
+load_dotenv('config.env')
 
 # Get Drive Folder ID's
 UNPROCESSED_FOLDER_ID = os.getenv("UNPROCESSED_FOLDER_ID")

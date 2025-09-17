@@ -5,7 +5,7 @@ import openai
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv('config.env')
 
 # Set up OpenAI API key
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -175,3 +175,58 @@ Focus on making this listing discoverable through Etsy search while accurately r
     except Exception as e:
         print("Error generating Etsy listing content:", e)
         return None, None
+
+# Test the GPT integration
+def test_gpt_integration():
+    
+    print("=== Testing GPT-4 Vision Integration ===")
+    
+    # Check if OpenAI API key is set
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        print("OPENAI_API_KEY not found in environment variables")
+        return False
+    
+    print("OpenAI API key found")
+    
+    # Test image path - you'll need to provide a real image path
+    test_image_path = "test_image.jpg"  # Change this to your test image path
+    test_product_folder_name = "Sunset_Landscape_Original_16x20_150"
+    
+    # Check if test image exists
+    if not os.path.exists(test_image_path):
+        print(f"❌ Test image not found: {test_image_path}")
+        print("Please provide a valid image path for testing")
+        return False
+    
+    print(f"Test image found: {test_image_path}")
+    print(f"Test product folder name: {test_product_folder_name}")
+    
+    try:
+        print("Testing GPT-4 Vision integration...")
+        listing_data, product_info = generate_etsy_listing_content(test_image_path, test_product_folder_name)
+        
+        if listing_data is not None and product_info is not None:
+            print("GPT integration test successful!")
+            print("\n--- Generated Listing Data ---")
+            print(f"Title: {listing_data['title']}")
+            print(f"Title length: {len(listing_data['title'])} characters")
+            print(f"Description preview: {listing_data['description'][:100]}...")
+            print(f"Number of tags: {len(listing_data['tags'])}")
+            print(f"Tags: {', '.join(listing_data['tags'])}")
+            print("\n--- Product Info ---")
+            print(f"Painting title: {product_info['painting_title']}")
+            print(f"Art type: {product_info['art_type']}")
+            print(f"Size: {product_info['size']}")
+            print(f"Price: ${product_info['price']}")
+            return True
+        else:
+            print("GPT integration test failed")
+            return False
+            
+    except Exception as e:
+        print(f"GPT integration test error: {e}")
+        return False
+
+if __name__ == "__main__":
+    test_gpt_integration()

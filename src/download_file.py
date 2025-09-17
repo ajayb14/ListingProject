@@ -25,6 +25,7 @@ def download_file(service, file_id, file_name, product_folder_name):
         for c in product_folder_name:
             if c.isalnum() or c in (' ', '-', '_'):
                 safe_folder_name = safe_folder_name + c
+        # Remove trailing spaces just to look nice
         safe_folder_name = safe_folder_name.rstrip()
         print("Safe folder name for the download directory:", safe_folder_name)
         

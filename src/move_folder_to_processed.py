@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 
 # Load environment variables from env file
-load_dotenv()
+load_dotenv('config.env')
 
 # Folder ID for destination (processed folder)
 PROCESSED_FOLDER_ID = os.getenv("PROCESSED_FOLDER_ID")
