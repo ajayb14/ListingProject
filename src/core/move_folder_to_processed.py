@@ -1,11 +1,4 @@
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from env file
-load_dotenv('config.env')
-
-# Folder ID for destination (processed folder)
-PROCESSED_FOLDER_ID = os.getenv("PROCESSED_FOLDER_ID")
+from .config import PROCESSED_FOLDER_ID
 
 def move_product_folder_to_processed(service, product_folder_id):
     """
