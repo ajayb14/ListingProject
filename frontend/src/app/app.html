@@ -1,0 +1,144 @@
+<main class="shell">
+  <header class="masthead">
+    <h1>Listing Generator</h1>
+    <p>Pick a painting folder from Drive and generate everything you need to write the listing.</p>
+  </header>
+
+  <section class="controls">
+    <label class="field">
+      <span class="field-label">Product folder</span>
+      <select
+        [value]="selectedFolderId()"
+        (change)="selectFolder($event)"
+        [disabled]="loadingFolders() || generating() || folders().length === 0"
+      >
+        @for (folder of folders(); track folder.id) {
+          <option [value]="folder.id">
+            {{ folder.product_info.painting_title }} — {{ folder.product_info.art_type }},
+            {{ folder.product_info.size }}, ${{ folder.product_info.price }}
+          </option>
+        } @empty {
+          <option value="">No folders with images</option>
+        }
+      </select>
+    </label>
+
+    <button class="primary" (click)="generate()" [disabled]="generating() || !selectedFolderId()">
+      {{ generating() ? 'Generating…' : 'Generate listing' }}
+    </button>
+
+    <button class="ghost" (click)="loadFolders()" [disabled]="loadingFolders() || generating()">
+      Refresh
+    </button>
+  </section>
+
+  @if (error()) {
+    <p class="banner error">{{ error() }}</p>
+  }
+
+  @if (doneMessage()) {
+    <p class="banner success">{{ doneMessage() }}</p>
+  }
+
+  @if (!loadingFolders() && folders().length === 0 && !error()) {
+    <p class="empty">
+      Nothing to list. Add a folder named
+      <code>Title_Original_8x10_150</code> to your Unprocessed Drive folder, put a photo of the
+      painting inside it, then hit Refresh.
+    </p>
+  }
+
+  @if (generating()) {
+    <p class="empty">Analyzing the painting. This usually takes a few seconds.</p>
+  }
+
+  @if (listing(); as result) {
+    <article class="result">
+      <div class="result-head">
+        <h2>{{ result.folder_name }}</h2>
+        <button class="ghost" (click)="copy(everythingAsText(), 'all')">
+          {{ copiedField() === 'all' ? 'Copied' : 'Copy everything' }}
+        </button>
+      </div>
+
+      @if (result.warnings.length) {
+        <ul class="warnings">
+          @for (warning of result.warnings; track warning) {
+            <li>{{ warning }}</li>
+          }
+        </ul>
+      }
+
+      <div class="block">
+        <div class="block-head">
+          <h3>Title</h3>
+          <span class="count">{{ result.title.length }} / 140</span>
+          <button class="copy" (click)="copy(result.title, 'title')">
+            {{ copiedField() === 'title' ? 'Copied' : 'Copy' }}
+          </button>
+        </div>
+        <p class="title-value">{{ result.title }}</p>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <h3>Description</h3>
+          <button class="copy" (click)="copy(result.description, 'description')">
+            {{ copiedField() === 'description' ? 'Copied' : 'Copy' }}
+          </button>
+        </div>
+        <p class="description">{{ result.description }}</p>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <h3>Tags</h3>
+          <span class="count">{{ result.tags.length }} / 13</span>
+          <button class="copy" (click)="copy(tagsAsText(), 'tags')">
+            {{ copiedField() === 'tags' ? 'Copied' : 'Copy' }}
+          </button>
+        </div>
+        <ul class="tags">
+          @for (tag of result.tags; track tag) {
+            <li>{{ tag }}</li>
+          }
+        </ul>
+      </div>
+
+      <div class="block">
+        <h3>From the folder name</h3>
+        <dl class="facts">
+          <div><dt>Painting</dt><dd>{{ result.painting_title }}</dd></div>
+          <div><dt>Type</dt><dd>{{ result.art_type }}</dd></div>
+          <div><dt>Size</dt><dd>{{ result.size }}</dd></div>
+          <div><dt>Price</dt><dd>${{ result.price }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="block">
+        <h3>Images</h3>
+        <div class="images">
+          @for (image of result.images; track image.id) {
+            <figure>
+              <img [src]="imageUrl(image.id)" [alt]="image.name" />
+              <figcaption>
+                <span>{{ image.name }}</span>
+                <a [href]="imageUrl(image.id, true)">Download</a>
+              </figcaption>
+            </figure>
+          }
+        </div>
+      </div>
+
+      <footer class="result-foot">
+        <p class="meta">
+          {{ result.model }} · {{ result.usage?.prompt_tokens ?? 0 }} in /
+          {{ result.usage?.completion_tokens ?? 0 }} out · saved to <code>{{ result.saved_to }}</code>
+        </p>
+        <button class="secondary" (click)="markDone()" [disabled]="markingDone()">
+          {{ markingDone() ? 'Moving…' : 'Mark as done' }}
+        </button>
+      </footer>
+    </article>
+  }
+</main>
