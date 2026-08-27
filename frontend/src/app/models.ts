@@ -1,5 +1,8 @@
 // These mirror the JSON returned by src/web/app.py, so a rename in Python breaks the build here
 
+// Keep in step with MAX_IMAGES in src/core/gpt_processor.py
+export const MAX_IMAGES = 5;
+
 export interface DriveImage {
   id: string;
   name: string;
@@ -33,6 +36,7 @@ export interface Listing extends ProductInfo {
   title: string;
   description: string;
   tags: string[];
+  images_analyzed: number;
   warnings: string[];
   model: string;
   usage?: TokenUsage;

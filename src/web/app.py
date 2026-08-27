@@ -10,7 +10,13 @@ from pydantic import BaseModel
 from ..core.config import PROJECT_ROOT, UNPROCESSED_FOLDER_ID
 from ..core.download_file import fetch_file_bytes
 from ..core.drive_authentication import get_drive_service
-from ..core.gpt_processor import ListingGenerationError, extract_product_info, generate_listing_content
+from ..core.gpt_processor import (
+    MAX_IMAGES,
+    ListingGenerationError,
+    extract_product_info,
+    generate_listing_content,
+    too_many_images_warning
+)
 from ..core.list_product_folders import list_images_in_folder, list_product_folders
 from ..core.move_folder_to_processed import move_product_folder_to_processed
 
@@ -76,9 +82,16 @@ def generate(request: FolderRequest):
     if not images:
         raise HTTPException(status_code=400, detail=f"No images found in {folder['name']}")
 
-    first_image = images[0]
-    image_bytes = fetch_file_bytes(service, first_image['id'])
-    listing = generate_listing_content(image_bytes, first_image['mimeType'], folder['name'])
+    # Every photo of the painting goes to the model, so extra angles improve the description.
+    # Sliced before downloading so a folder full of strays does not pull megabytes we discard.
+    downloaded = [
+        (fetch_file_bytes(service, image['id']), image['mimeType'])
+        for image in images[:MAX_IMAGES]
+    ]
+    listing = generate_listing_content(downloaded, folder['name'])
+
+    if len(images) > MAX_IMAGES:
+        listing['warnings'].append(too_many_images_warning(len(images)))
 
     result = {
         'folder_id': folder['id'],

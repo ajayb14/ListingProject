@@ -40,6 +40,10 @@
     <p class="banner success">{{ doneMessage() }}</p>
   }
 
+  @if (extraImagesNotice()) {
+    <p class="banner" [class.warn]="extraImagesIsWarning()">{{ extraImagesNotice() }}</p>
+  }
+
   @if (!loadingFolders() && folders().length === 0 && !error()) {
     <p class="empty">
       Nothing to list. Add a folder named
@@ -132,8 +136,10 @@
 
       <footer class="result-foot">
         <p class="meta">
-          {{ result.model }} · {{ result.usage?.prompt_tokens ?? 0 }} in /
-          {{ result.usage?.completion_tokens ?? 0 }} out · saved to <code>{{ result.saved_to }}</code>
+          {{ result.model }} · {{ result.images_analyzed }}
+          {{ result.images_analyzed === 1 ? 'image' : 'images' }} analyzed ·
+          {{ result.usage?.prompt_tokens ?? 0 }} in / {{ result.usage?.completion_tokens ?? 0 }} out ·
+          saved to <code>{{ result.saved_to }}</code>
         </p>
         <button class="secondary" (click)="markDone()" [disabled]="markingDone()">
           {{ markingDone() ? 'Moving…' : 'Mark as done' }}

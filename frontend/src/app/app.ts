@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 
 import { ListingService } from './listing.service';
-import { Listing, ProductFolder } from './models';
+import { Listing, MAX_IMAGES, ProductFolder } from './models';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +26,22 @@ export class App {
   );
 
   protected readonly tagsAsText = computed(() => this.listing()?.tags.join(', ') ?? '');
+
+  // Said up front because each extra photo adds to what the generation costs
+  protected readonly extraImagesNotice = computed(() => {
+    const count = this.selectedFolder()?.images.length ?? 0;
+    if (count <= 1) {
+      return '';
+    }
+    if (count > MAX_IMAGES) {
+      return `This folder has ${count} images. Only the first ${MAX_IMAGES} will be analyzed.`;
+    }
+    return `All ${count} images will be analyzed together for a more detailed description.`;
+  });
+
+  protected readonly extraImagesIsWarning = computed(
+    () => (this.selectedFolder()?.images.length ?? 0) > MAX_IMAGES
+  );
 
   protected readonly everythingAsText = computed(() => {
     const listing = this.listing();

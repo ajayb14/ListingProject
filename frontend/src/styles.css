@@ -143,6 +143,12 @@ button:not(:disabled):hover {
   background: color-mix(in srgb, var(--ok) 12%, var(--panel));
 }
 
+.banner.warn {
+  border-color: color-mix(in srgb, var(--warn) 40%, var(--line));
+  background: color-mix(in srgb, var(--warn) 10%, var(--panel));
+  color: var(--warn);
+}
+
 .empty {
   padding: 28px;
   border: 1px dashed var(--line);
