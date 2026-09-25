@@ -55,12 +55,6 @@ not mean paying for another generation.
 
    Optionally add `OPENAI_MODEL = gpt-4o-mini` to trade quality for cost. The default is `gpt-4o`.
 
-5. Confirm Drive authentication works:
-
-   ```bash
-   listing-agent-env/bin/python -m src.core.drive_authentication
-   ```
-
 ## Drive folder layout
 
 Inside your Unprocessed folder, one folder per painting, named:

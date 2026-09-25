@@ -32,27 +32,3 @@ def get_drive_service():
     except Exception as e:
         print("Error in get_drive_service:", e)
         return None
-
-# Test the drive authentication
-def test_drive_connection():
-    print("Testing Google Drive Authentication")
-    
-    service = get_drive_service()
-    if service is None:
-        print("Drive authentication failed")
-        return False
-    
-    try:
-        # Test listing files to verify connection works
-        print("Testing file listing...")
-        service.files().list(pageSize=1).execute()
-        print("Successfully listed files from Google Drive")
-        print("Drive authentication test passed")
-        return True
-        
-    except Exception as e:
-        print(f"Drive connection test failed: {e}")
-        return False
-
-if __name__ == "__main__":
-    test_drive_connection()

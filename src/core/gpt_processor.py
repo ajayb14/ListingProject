@@ -8,7 +8,6 @@ from .config import OPENAI_API_KEY, OPENAI_MODEL
 # Soft limits: results that break them are still returned, with a warning attached
 MAX_TITLE_LENGTH = 140
 TARGET_TAG_COUNT = 13
-# Every extra photo costs tokens
 MAX_IMAGES = 5
 
 
@@ -188,27 +187,3 @@ def generate_listing_content(images, product_folder_name):
 
     print("Listing content generated with", len(listing['warnings']), "warnings")
     return listing
-
-
-if __name__ == "__main__":
-    import mimetypes
-    import sys
-
-    if len(sys.argv) < 3:
-        print("Usage: python -m src.core.gpt_processor <Title_Type_Size_Price> <image_path>...")
-        sys.exit(1)
-
-    folder_name, image_paths = sys.argv[1], sys.argv[2:]
-
-    images = []
-    for image_path in image_paths:
-        with open(image_path, 'rb') as f:
-            images.append((f.read(), mimetypes.guess_type(image_path)[0] or 'image/jpeg'))
-
-    try:
-        result = generate_listing_content(images, folder_name)
-    except ListingGenerationError as error:
-        print("Failed:", error)
-        sys.exit(1)
-
-    print(json.dumps(result, indent=2))
